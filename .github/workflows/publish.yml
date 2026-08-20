@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write   # npm Trusted Publishing (OIDC) 需要
+      id-token: write   # 仅用于 npm provenance 签名（认证走 NPM_TOKEN）
     steps:
       - uses: actions/checkout@v5
         with:
@@ -39,9 +39,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           npm run release -- --release "${{ github.event.inputs.version }}" -y
 
-      # Trusted Publishing: 通过 GitHub OIDC 获取临时凭据，无需 NPM_TOKEN
+      # 经典 NPM_TOKEN 方案：setup-node 生成的 .npmrc 读取 NODE_AUTH_TOKEN
       - name: Publish to npm
         run: npm run publish:npm -- --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         run: |
