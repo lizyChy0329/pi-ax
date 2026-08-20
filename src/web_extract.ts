@@ -142,7 +142,7 @@ export function runAx(args: string[], signal?: AbortSignal): { stdout: string; s
     if ((result.error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new Error(
         "ax is not installed. Run `curl -fsSL https://ax.yusuke.run/install | sh` to install it, " +
-        "or run `pi update --extension pi-ax` to auto-install it."
+        "or run `pi update --extension @lizychy0329/pi-ax` to auto-install it."
       );
     }
     throw result.error;

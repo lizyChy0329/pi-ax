@@ -1,8 +1,16 @@
 {
-  "name": "pi-ax",
+  "name": "@lizychy0329/pi-ax",
   "version": "0.0.2",
   "description": "ax integration for pi: structured web extraction via CSS selectors and HTTP API calls",
-  "keywords": ["pi-package", "pi-extension", "pi-skill", "web", "extraction", "scraping", "ax"],
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi-skill",
+    "web",
+    "extraction",
+    "scraping",
+    "ax"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,11 +26,15 @@
   "scripts": {
     "release": "bumpp --tag --commit --push",
     "release:dry-run": "bumpp --tag --commit --dry-run",
-    "publish:npm": "npm publish"
+    "publish:npm": "npm publish --access public"
   },
   "pi": {
-    "extensions": ["./src/index.ts"],
-    "skills": ["./skills/ax/SKILL.md"]
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "skills": [
+      "./skills/ax/SKILL.md"
+    ]
   },
   "devDependencies": {
     "bumpp": "^10.1.2"

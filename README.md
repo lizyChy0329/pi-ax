@@ -1,4 +1,4 @@
-# pi-ax
+# @lizychy0329/pi-ax
 
 > [ax](https://github.com/yusukebe/ax) 集成包 for pi — 结构化网页提取，无需写解析脚本。
 
@@ -7,8 +7,11 @@
 ## 安装
 
 ```bash
-# 从 GitHub 安装
-pi install git:github.com/yourname/pi-ax
+# 从 npm 安装
+pi install npm:@lizychy0329/pi-ax
+
+# 或从 GitHub 安装
+pi install git:github.com/lizyChy0329/pi-ax
 
 # 或从本地路径安装（开发模式）
 pi install ./pi-ax
@@ -59,8 +62,8 @@ cd pi-ax
 # 本地测试（使用 --extension 或 -e 临时加载）
 pi -e ./src/index.ts
 
-# 发布到 GitHub 后，其他用户可安装
-pi install git:github.com/yourname/pi-ax
+# 发布到 npm 后，其他用户可安装
+pi install npm:@lizychy0329/pi-ax
 ```
 
 ## 与 fetch_content 的分工

@@ -59,7 +59,7 @@ Continuation (pagination):
           return {
             content: [{
               type: "text",
-              text: "ax is not installed. Run `curl -fsSL https://ax.yusuke.run/install | sh` or install pi-ax via pi.",
+              text: "ax is not installed. Run `curl -fsSL https://ax.yusuke.run/install | sh` or install @lizychy0329/pi-ax via pi.",
             }],
             isError: true,
             details: {},
