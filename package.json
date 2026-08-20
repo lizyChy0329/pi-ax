@@ -6,9 +6,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wsl-ubuntu24/pi-ax"
+    "url": "https://github.com/lizyChy0329/pi-ax"
   },
-  "homepage": "https://github.com/wsl-ubuntu24/pi-ax#readme",
+  "homepage": "https://github.com/lizyChy0329/pi-ax#readme",
   "files": [
     "src/**/*.ts",
     "skills/**",
