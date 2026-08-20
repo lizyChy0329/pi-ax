@@ -53,7 +53,7 @@ agent 会自动调用 `web_extract` 的 extract 模式。
 
 ```bash
 # 克隆项目
-git clone https://github.com/yourname/pi-ax
+git clone https://github.com/lizyChy0329/pi-ax
 cd pi-ax
 
 # 本地测试（使用 --extension 或 -e 临时加载）
