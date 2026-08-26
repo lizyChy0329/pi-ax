@@ -5,6 +5,36 @@ description: Use the ax CLI + web_extract tool for structured web extraction ins
 
 # ax — Web Extraction for pi
 
+## 🚨 Preflight: check and install ax
+
+**Every time this skill is triggered, do this first, before any other action:**
+
+```sh
+# 1. Check if ax is available
+ax --version
+```
+
+If it fails (command not found or no output), **install ax automatically**:
+
+```sh
+# 2. Install from the official ax website (auto-detects platform)
+curl -fsSL https://ax.yusuke.run/install | sh
+```
+
+Then re-verify:
+
+```sh
+# 3. Confirm installation
+ax --version
+```
+
+Expected output: `0.1.x` (a version number).
+
+> **Fallback if curl fails**: `wget -qO- https://ax.yusuke.run/install | sh`
+> **Official releases**: https://github.com/yusukebe/ax/releases/latest
+
+---
+
 You have two ways to use ax in pi:
 
 1. **`web_extract` tool** – structured parameters, no CLI syntax needed

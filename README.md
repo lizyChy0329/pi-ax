@@ -1,83 +1,183 @@
+![hero](assets/readme/hero.svg)
+
 # @lizychy0329/pi-ax
 
-> [ax](https://github.com/yusukebe/ax) 集成包 for pi — 结构化网页提取，无需写解析脚本。
+**ax 集成包 for pi** — 结构化网页提取，无需写任何解析脚本。
 
-提供 **自定义工具** (`web_extract`) + **skill** 指导，让 pi 的 agent 能够通过 CSS 选择器从 HTML 中提取结构化数据（表格、列表、卡片）、发现页面结构、调用 REST API。
+> [ax](https://github.com/yusukebe/ax) is a Rust CLI built for fast, token-cheap web extraction. This package wraps it as a **pi extension** — giving your agent a `web_extract` tool with 7 operation modes, plus a skill that tells the agent when to use it vs `fetch_content`.
 
-## 安装
+---
+
+## 项目简介与技术栈
+
+| 项目 | 说明 |
+|---|---|
+| **ax CLI** | [Rust](https://github.com/yusukebe/ax) — 底层提取引擎，支持 7 种模式、CSS 选择器、TSV 输出、URL 缓存 |
+| **web_extract 工具** | TypeScript — 将 ax CLI 封装为 pi 结构化参数工具，注册为 `web_extract` |
+| **SKILL** | Markdown — 指导 agent 何时用 ax、何时用 fetch_content |
+| **自动安装** | 首次使用时自动检测环境，缺失则从 [ax 官方](https://github.com/yusukebe/ax/releases/latest) 下载二进制到 `~/.pi/agent/bin/`（无需 sudo） |
+| **测试** | Vitest — 33 单元测试 + 7 集成测试，覆盖全部 mode 分支和可选参数 |
+
+### 架构
+
+```
+pi Agent (LLM)
+    │
+    ├── web_extract 工具 ─── buildAxArgs(params) ─── spawnSync("ax", args)
+    │         │                              │
+    │         └── TypeBox schema             └── Rust ax CLI (7 modes)
+    │
+    └── SKILL ─── 决策指南：何时 ax、何时 fetch_content
+```
+
+---
+
+## 快速开始
+
+### 安装
 
 ```bash
-# 从 npm 安装
+# 从 npm 安装（推荐）
 pi install npm:@lizychy0329/pi-ax
 
 # 或从 GitHub 安装
 pi install git:github.com/lizyChy0329/pi-ax
-
-# 或从本地路径安装（开发模式）
-pi install ./pi-ax
 ```
 
-## 能力
+安装后，pi 会自动：
+1. 检测 `ax` 是否已安装
+2. 若未安装，自动下载 ax 二进制到 `~/.pi/agent/bin/`（**无需 sudo**）
+3. 注册 `web_extract` 工具和 `ax` skill
 
-### web_extract 工具
+### 第一个请求
 
-一个自定义工具，覆盖 ax 的 6 种核心模式：
+告诉 agent：
 
-| 模式 | 说明 | 典型场景 |
-|---|---|---|
-| `fetch` | 完整 HTTP 报告（状态、头、耗时、body） | 调用 REST API、调试接口 |
-| `outline` | 页面结构发现（重复 tag.class + 计数） | 提取前了解页面结构 |
-| `locate` | 查找某段文本在 DOM 中的 CSS 选择器 | 知道文本内容但不知道选择器 |
-| `extract` | CSS 选择器多字段行提取 | 提取列表/卡片数据（标题、链接、价格） |
-| `table` | HTML `<table>` 提取为键值行 | 提取表格数据 |
-| `markdown` | 页面转可读 Markdown，支持 token 预算 | 阅读文档页 |
+> "提取 https://github.com 页面上所有导航链接的标题"
 
-### Skill 指导
+agent 会自动调用：
+```json
+{
+  "url": "https://github.com",
+  "mode": "extract",
+  "selector": "a[href]",
+  "fields": "title=@innerText"
+}
+```
 
-skill 文件告诉 agent **何时该用 `web_extract`、何时该用 `fetch_content`**，避免工具选择混乱。
-
-## 命令行参考
-
-### 使用 web_extract 工具
-
-在 pi 中直接向 agent 描述需求即可，它会自动调用 `web_extract` 工具。例如：
-
-> "提取 https://example.com/items 中所有卡的标题和链接"
-
-agent 会自动调用 `web_extract` 的 extract 模式。
-
-### 高级用法：直接使用 ax CLI
-
-对于需要精细控制 HTTP 请求的场景（如 POST 请求体、文件上传、`--json-envelope` 分页），可以告诉 agent 直 接用 `ax` CLI：
-
-> "用 ax 调用 https://api.example.com/data 的 POST 接口，body 是 @payload.json"
-
-## 开发
+### 本地开发
 
 ```bash
-# 克隆项目
 git clone https://github.com/lizyChy0329/pi-ax
 cd pi-ax
+npm install
 
-# 本地测试（使用 --extension 或 -e 临时加载）
+# 运行测试
+npm test
+
+# 临时加载（开发模式）
 pi -e ./src/index.ts
-
-# 发布到 npm 后，其他用户可安装
-pi install npm:@lizychy0329/pi-ax
 ```
 
-## 与 fetch_content 的分工
+---
 
-| 场景 | 工具 |
+## 为什么需要他？
+
+- **不用写解析脚本**：过去要从 HTML 提取数据得写正则或 DOM 解析，现在只要一个 `web_extract` 调用
+- **Token 便宜**：默认 TSV 输出，约为 JSON 的 1/3 token
+- **7 种模式，一个工具**：HTTP 报告、结构发现、文本定位、结构化提取、表格提取、Markdown 转换、原始解析
+- **自动安装**：不用手动装 ax，缺失时自动从官网下载
+- **Skill 决策**：告诉 agent 什么场景用 ax、什么场景用 fetch_content，避免工具选择混乱
+
+---
+
+## 能做什么？不能做什么？
+
+![tools-compare](assets/readme/tools-compare.svg)
+
+### ✅ web_extract 能做
+
+| 模式 | 场景 | 示例 |
+|---|---|---|
+| `fetch` | REST API 调用、HTTP 调试 | `fetch(url, method="POST", body='{"a":1}')` |
+| `outline` | 页面结构发现（提取前先探查） | `outline(url)` → tag.class 模式计数 |
+| `locate` | 找某段文本的 CSS 选择器 | `locate(url, query="Pricing")` → `.nav-pricing` |
+| `extract` | 结构化行提取（列表、卡片、搜索结果） | `extract(selector=".card", fields="title=a, href=a@href")` |
+| `table` | HTML `<table>` → 键值行 | `table(selector="table")` → 列名来自 `<th>` |
+| `markdown` | 文档页 → 可读 Markdown（支持 token 预算） | `markdown(url, budget=800)` |
+| `parse` | 原始页面内容（带 ~2min URL 缓存） | `parse(url, fresh=true)` 绕过缓存 |
+
+### ❌ 不该用 web_extract
+
+| 场景 | 改用 |
 |---|---|
-| 结构化提取（CSS 选择器、表格、多字段） | `web_extract` |
-| 读取文档/文章为可读 Markdown | `fetch_content` |
-| 未知页面的结构探索 | `web_extract` (outline) |
-| 视频/YouTube/PDF 分析 | `fetch_content` |
-| GitHub 仓库克隆和分析 | `fetch_content` |
-| REST API 调用（GET/POST/PUT/DELETE） | `web_extract` (fetch) |
-| 大数据集分页 | `web_extract` (envelope + offset) |
+| YouTube 视频内容 | `fetch_content` |
+| PDF 文档 | `fetch_content` |
+| GitHub 仓库分析 | `fetch_content` |
+| 纯文章阅读（无需 CSS 选择器） | `fetch_content` |
+
+---
+
+## 工作流：从未知页面提取数据
+
+![workflow](assets/readme/workflow.svg)
+
+**步骤 1：发现结构** → `web_extract` mode: `outline`
+
+```
+$ ax https://example.com --outline
+ 210  path
+  90  li
+  82  a.Link
+  37  li.item
+```
+
+**步骤 2：定位选择器** → `web_extract` mode: `locate`
+
+```
+$ ax https://example.com --locate "Pricing"
+→ .nav-pricing
+```
+
+**步骤 3：结构化提取** → `web_extract` mode: `extract`
+
+```json
+{ "url": "https://example.com", "mode": "extract",
+  "selector": ".item", "fields": "name=a, price=.price" }
+```
+
+**步骤 4：分页继续** → `envelope: true` + `offset`
+
+```json
+{ "url": "https://example.com", "mode": "extract",
+  "selector": ".item", "fields": "name=a",
+  "limit": 20, "envelope": true }
+```
+
+Aim for ≤3 tool calls. The 2-minute URL cache makes repeated probes free.
+
+### 常见陷阱
+
+- **`<a>` 自身做 row selector**：字段 `a` 在 `<a>` 内找不到子元素 → 空。用父容器作 row selector。
+- **HTTPS→HTTP 跳转**：百度等站点强制降级，直接用 `http://`。
+- **单行压缩 HTML**：`--outline` 效果差，用 `--fresh` 或 Python 格式化。
+
+---
+
+## 相关资源链接
+
+| 资源 | 链接 |
+|---|---|
+| ax 官方项目 | [github.com/yusukebe/ax](https://github.com/yusukebe/ax) |
+| ax 安装脚本 | [ax.yusuke.run/install](https://ax.yusuke.run/install) |
+| ax 最新发布 | [github.com/yusukebe/ax/releases/latest](https://github.com/yusukebe/ax/releases/latest) |
+| 本包源码 | [github.com/lizyChy0329/pi-ax](https://github.com/lizyChy0329/pi-ax) |
+| pi-coding-agent | [pi-coding-agent](https://github.com/earendil-works/pi-coding-agent) |
+| TypeBox | [github.com/sinclairzx81/typebox](https://github.com/sinclairzx81/typebox) |
+| Vitest | [vitest.dev](https://vitest.dev) |
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE)

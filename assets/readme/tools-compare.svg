@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200" width="100%" font-family="ui-sans-serif, system-ui, sans-serif">
+  <!-- Title -->
+  <text x="30" y="28" fill="#9ca3af" font-size="12" font-weight="600" letter-spacing="1.5">WHEN TO USE WHAT</text>
+
+  <!-- ax column -->
+  <g transform="translate(30, 50)">
+    <rect x="0" y="0" width="540" height="130" rx="10" fill="#11111a" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="20" y="28" fill="#8b5cf6" font-size="15" font-weight="700">⚡ ax / web_extract</text>
+    <text x="20" y="48" fill="#9ca3af" font-size="11">Primary tool — use by default</text>
+    <g font-family="ui-monospace, SFMono-Regular, monospace" font-size="11" fill="#e4e4e7" transform="translate(20, 70)">
+      <text x="0" y="0">✓ Structured data from HTML (CSS selectors)</text>
+      <text x="0" y="16">✓ Page structure discovery (outline)</text>
+      <text x="0" y="32">✓ REST API calls with full HTTP report</text>
+      <text x="0" y="48">✓ HTML tables → keyed rows</text>
+      <text x="0" y="64">✓ Markdown with token budget</text>
+      <text x="0" y="80">✓ Pagination with --json-envelope</text>
+      <text x="0" y="96">✓ Local HTML files</text>
+    </g>
+  </g>
+
+  <!-- fetch_content column -->
+  <g transform="translate(630, 50)">
+    <rect x="0" y="0" width="540" height="130" rx="10" fill="#11111a" stroke="#2a2a3e" stroke-width="1"/>
+    <text x="20" y="28" fill="#9ca3af" font-size="15" font-weight="700">📄 fetch_content</text>
+    <text x="20" y="48" fill="#6b7280" font-size="11">Fallback — only for these cases</text>
+    <g font-family="ui-monospace, SFMono-Regular, monospace" font-size="11" fill="#e4e4e7" transform="translate(20, 70)">
+      <text x="0" y="0">✓ YouTube video content</text>
+      <text x="0" y="16">✓ PDF documents</text>
+      <text x="0" y="32">✓ GitHub repository analysis</text>
+      <text x="0" y="48">✓ Plain articles (no selectors needed)</text>
+      <text x="0" y="64">✓ Readable text extraction from noisy pages</text>
+    </g>
+  </g>
+</svg>

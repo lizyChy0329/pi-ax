@@ -1,13 +1,14 @@
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const AX_BIN = "ax";
 const INSTALL_URL = "https://ax.yusuke.run/install";
+const RELEASES_URL = "https://github.com/yusukebe/ax/releases/latest/download";
 
 /**
- * Check if `ax` is available in PATH.
+ * Check if `ax` is available in PATH or in the pi bin directory.
  */
 export function isAxInstalled(): boolean {
   try {
@@ -19,107 +20,75 @@ export function isAxInstalled(): boolean {
 }
 
 /**
- * Install ax via the official install script.
+ * Resolve the ax download URL based on current platform and architecture.
  *
- * Tries curl first, then wget as fallback.
- * Returns true if installation succeeded, false otherwise.
+ * Release assets (verified from https://github.com/yusukebe/ax/releases/latest):
+ *   ax-darwin-arm64
+ *   ax-darwin-x64
+ *   ax-linux-arm64
+ *   ax-linux-x64
+ *   ax-windows-x64.exe
  */
-export function installAx(): boolean {
-  // If already installed, no need to reinstall
-  if (isAxInstalled()) return true;
+function resolveDownloadUrl(): string | null {
+  const os = process.platform;
+  const arch = process.arch;
 
-  // Try curl
-  try {
-    execSync("curl --version", { stdio: "ignore" });
-    execSync(`curl -fsSL ${INSTALL_URL} | sh`, {
-      stdio: "inherit",
-      timeout: 60_000,
-    });
-    return isAxInstalled();
-  } catch {
-    // curl failed or wasn't found
+  // Node.js process.platform / process.arch → release asset name
+  const lookup: Record<string, Record<string, string>> = {
+    linux: {
+      x64: "ax-linux-x64",
+      arm64: "ax-linux-arm64",
+    },
+    darwin: {
+      x64: "ax-darwin-x64",
+      arm64: "ax-darwin-arm64",
+    },
+    win32: {
+      x64: "ax-windows-x64.exe",
+      arm64: "ax-windows-x64.exe",
+    },
+  };
+
+  const ext = os === "win32" ? ".exe" : "";
+  const asset = lookup[os]?.[arch];
+  if (!asset) {
+    return null;
   }
 
-  // Try wget as fallback
-  try {
-    execSync("wget --version", { stdio: "ignore" });
-    execSync(`wget -qO- ${INSTALL_URL} | sh`, {
-      stdio: "inherit",
-      timeout: 60_000,
-    });
-    return isAxInstalled();
-  } catch {
-    // wget also failed
-  }
-
-  return false;
+  return `${RELEASES_URL}/${asset}${ext}`;
 }
 
 /**
- * Install ax to a custom location (e.g., ~/.pi/agent/bin/ax).
- * This avoids the need for sudo when the default install script
- * targets /usr/local/bin/.
+ * Install ax to ~/.pi/agent/bin/ax (no sudo needed).
+ * Returns true on success, false on failure.
  */
 export function installAxToPiDir(): boolean {
+  const downloadUrl = resolveDownloadUrl();
+  if (!downloadUrl) {
+    return false;
+  }
+
   const piBinDir = join(homedir(), ".pi", "agent", "bin");
   const axPath = join(piBinDir, "ax");
 
+  // Already valid — skip
   if (existsSync(axPath)) {
     try {
       execSync(`${axPath} --version`, { stdio: "ignore" });
       return true;
     } catch {
-      // Binary exists but is broken, reinstall
+      // Binary exists but broken, overwrite
     }
   }
-
-  // Download the ax binary directly
-  // The install script sources from GitHub releases
-  const os = process.platform;
-  const arch = process.arch === "x64" ? "x86_64" : process.arch;
-
-  // Determine download URL based on platform
-  let downloadUrl: string;
-  const ext = os === "win32" ? ".exe" : "";
-
-  // Map Node.js process.platform to the release asset naming
-  // ax releases use: ax-{os}-{arch} (e.g., ax-linux-x86_64)
-  const osMap: Record<string, string> = {
-    linux: "linux",
-    darwin: "darwin",
-    win32: "windows",
-  };
-  const archMap: Record<string, string> = {
-    x64: "x86_64",
-    arm64: "aarch64",
-    arm: "armv7l",
-  };
-
-  const targetOs = osMap[os];
-  const targetArch = archMap[arch] ?? arch;
-
-  if (!targetOs) {
-    return false;
-  }
-
-  // Try to get the latest version from the install script, or use a known URL
-  // The install script resolves to: https://github.com/yusukebe/ax/releases/latest/download/ax-{os}-{arch}
-  downloadUrl = `https://github.com/yusukebe/ax/releases/latest/download/ax-${targetOs}-${targetArch}${ext}`;
 
   try {
     mkdirSync(piBinDir, { recursive: true });
-
-    // Download with curl
     execSync(`curl -fsSL -o "${axPath}" "${downloadUrl}"`, {
       timeout: 60_000,
     });
-
-    // Make executable
-    if (os !== "win32") {
+    if (process.platform !== "win32") {
       execSync(`chmod +x "${axPath}"`);
     }
-
-    // Verify
     execSync(`${axPath} --version`, { stdio: "ignore" });
     return true;
   } catch {
@@ -128,15 +97,54 @@ export function installAxToPiDir(): boolean {
 }
 
 /**
+ * Install ax via the official install script (curl/wget fallback).
+ * Requires network and possibly sudo for /usr/local/bin/.
+ */
+export function installAx(): boolean {
+  if (isAxInstalled()) return true;
+
+  try {
+    execSync("curl --version", { stdio: "ignore" });
+    execSync(`curl -fsSL ${INSTALL_URL} | sh`, {
+      stdio: "inherit",
+      timeout: 60_000,
+    });
+    return isAxInstalled();
+  } catch {
+    // fall through
+  }
+
+  try {
+    execSync("wget --version", { stdio: "ignore" });
+    execSync(`wget -qO- ${INSTALL_URL} | sh`, {
+      stdio: "inherit",
+      timeout: 60_000,
+    });
+    return isAxInstalled();
+  } catch {
+    // fall through
+  }
+
+  return false;
+}
+
+/**
  * Ensure ax is installed and available.
+ *
+ * Priority:
+ *  1. Already in PATH
+ *  2. Already in ~/.pi/agent/bin/
+ *  3. Download to ~/.pi/agent/bin/ (no sudo, verified URL)
+ *  4. Official install script (curl/wget, may need sudo)
+ *
  * Returns true if ax is ready, false otherwise.
  */
 export function ensureAxInstalled(): boolean {
   if (isAxInstalled()) return true;
 
-  // Try installing to pi's bin directory first (no sudo needed)
+  // Prefer pi-local install — no sudo required, exact asset URL
   if (installAxToPiDir()) return true;
 
-  // Try the official install script as fallback
+  // Fall back to the official install script
   return installAx();
 }

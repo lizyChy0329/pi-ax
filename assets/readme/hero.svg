@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="100%" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#09090b"/>
+      <stop offset="1" stop-color="#11111a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+
+  <!-- Subtle grid dots -->
+  <g fill="#1a1a2e" opacity="0.4">
+    <circle cx="40" cy="40" r="1"/><circle cx="80" cy="40" r="1"/><circle cx="120" cy="40" r="1"/>
+    <circle cx="40" cy="80" r="1"/><circle cx="80" cy="80" r="1"/><circle cx="120" cy="80" r="1"/>
+    <circle cx="40" cy="120" r="1"/><circle cx="80" cy="120" r="1"/><circle cx="120" cy="120" r="1"/>
+    <circle cx="1040" cy="440" r="1"/><circle cx="1080" cy="440" r="1"/><circle cx="1120" cy="440" r="1"/>
+    <circle cx="1040" cy="480" r="1"/><circle cx="1080" cy="480" r="1"/><circle cx="1120" cy="480" r="1"/>
+    <circle cx="1040" cy="380" r="1"/><circle cx="1080" cy="380" r="1"/><circle cx="1120" cy="380" r="1"/>
+  </g>
+
+  <!-- Title area -->
+  <g transform="translate(60, 60)">
+    <text x="0" y="0" fill="#8b5cf6" font-size="14" font-weight="600" letter-spacing="2">PI EXTENSION · v0.0.4</text>
+    <text x="0" y="52" fill="#f4f4f5" font-size="48" font-weight="700" letter-spacing="-1">@lizychy0329/pi-ax</text>
+    <text x="0" y="92" fill="#9ca3af" font-size="20">Structured web extraction for pi — turn any webpage into structured data</text>
+  </g>
+
+  <!-- Terminal window (left) -->
+  <g transform="translate(60, 200)">
+    <rect x="0" y="0" width="520" height="240" rx="10" fill="#0f0f1a" stroke="#2a2a3e" stroke-width="1"/>
+    <rect x="0" y="0" width="520" height="28" rx="10" fill="#1a1a2e"/>
+    <circle cx="16" cy="14" r="5" fill="#ef4444"/>
+    <circle cx="32" cy="14" r="5" fill="#eab308"/>
+    <circle cx="48" cy="14" r="5" fill="#22c55e"/>
+    <text x="66" y="19" fill="#6b7280" font-size="11" font-family="ui-monospace, SFMono-Regular, monospace">web_extract — live demo</text>
+
+    <g font-family="ui-monospace, SFMono-Regular, monospace" font-size="13" transform="translate(20, 56)">
+      <text x="0" y="0" fill="#6b7280">$</text>
+      <text x="18" y="0" fill="#e4e4e7">ax https://github.com</text>
+      <text x="18" y="20" fill="#e4e4e7">--outline</text>
+
+      <text x="0" y="56" fill="#6b7280">$</text>
+      <text x="18" y="56" fill="#e4e4e7">ax https://github.com</text>
+      <text x="18" y="76" fill="#e4e4e7">'li.LinkColumn-module__item__nrsNE'</text>
+      <text x="18" y="96" fill="#e4e4e7">--row 'text=@innerText'</text>
+
+      <text x="0" y="132" fill="#6b7280">$</text>
+      <text x="18" y="132" fill="#e4e4e7">web_extract(url=&quot;https://api.example.com&quot;,</text>
+      <text x="18" y="152" fill="#e4e4e7">  mode=&quot;fetch&quot;)</text>
+      <text x="18" y="172" fill="#6b7280"># → { status: 200, ok: true, ms: 142 }</text>
+    </g>
+  </g>
+
+  <!-- Mode cards (right) -->
+  <g transform="translate(630, 200)">
+    <text x="0" y="0" fill="#9ca3af" font-size="14" font-weight="600" letter-spacing="1">7 OPERATION MODES</text>
+
+    <!-- Mode grid: 2 rows × 4 cols minus 1 -->
+    <g font-family="ui-monospace, SFMono-Regular, monospace" font-size="12">
+      <!-- Row 1 -->
+      <g transform="translate(0, 24)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">fetch</text>
+        <text x="12" y="38" fill="#9ca3af">HTTP report</text>
+      </g>
+      <g transform="translate(140, 24)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">outline</text>
+        <text x="12" y="38" fill="#9ca3af">Structure</text>
+      </g>
+      <g transform="translate(280, 24)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">locate</text>
+        <text x="12" y="38" fill="#9ca3af">Find text</text>
+      </g>
+      <g transform="translate(420, 24)">
+        <rect x="0" y="0" width="130" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">extract</text>
+        <text x="12" y="38" fill="#9ca3af">Structured rows</text>
+      </g>
+
+      <!-- Row 2 -->
+      <g transform="translate(0, 92)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">table</text>
+        <text x="12" y="38" fill="#9ca3af">HTML tables</text>
+      </g>
+      <g transform="translate(140, 92)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">markdown</text>
+        <text x="12" y="38" fill="#9ca3af">Docs to MD</text>
+      </g>
+      <g transform="translate(280, 92)">
+        <rect x="0" y="0" width="125" height="54" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <text x="12" y="20" fill="#8b5cf6" font-weight="600">parse</text>
+        <text x="12" y="38" fill="#9ca3af">Raw content</text>
+      </g>
+
+      <!-- Feature badges -->
+      <g transform="translate(0, 170)">
+        <rect x="0" y="0" width="665" height="44" rx="8" fill="#11111a" stroke="#2a2a3e"/>
+        <g font-size="11" fill="#9ca3af">
+          <text x="16" y="28">⚡ 33 tests</text>
+          <text x="110" y="28">🦀 Rust CLI</text>
+          <text x="210" y="28">📦 TSV output</text>
+          <text x="315" y="28">🔁 Pagination</text>
+          <text x="425" y="28">💾 ~2min cache</text>
+          <text x="535" y="28">🚫 No sudo</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- Footer line -->
+  <text x="60" y="470" fill="#4b5563" font-size="12">pi-ax · MIT License · https://github.com/lizyChy0329/pi-ax</text>
+</svg>
