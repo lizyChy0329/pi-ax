@@ -1,6 +1,6 @@
 {
   "name": "@lizychy0329/pi-ax",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "ax integration for pi: structured web extraction via CSS selectors and HTTP API calls",
   "keywords": [
     "pi-package",
