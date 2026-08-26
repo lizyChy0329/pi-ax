@@ -5,35 +5,49 @@ import { spawnSync } from "node:child_process";
  * Parameter schema for the web_extract tool.
  *
  * Designed to cover the most common ax workflows:
- *   fetch, outline, locate, extract, table, markdown.
+ *   fetch, outline, locate, extract, table, markdown, parse.
+ *
+ * IMPORTANT: Type.Enum uses the KEYS as the actual enum values.
+ * The values are display strings for the UI. Keep them short and equal to keys
+ * where the switch statement matches on them.
  */
 export const webExtractParams = Type.Object({
-  url: Type.String({ description: "URL to fetch (e.g. https://example.com)" }),
+  url: Type.String({ description: "URL to fetch (e.g. https://example.com) or local file path" }),
 
   mode: Type.Enum({
-    fetch: "Fetch with full HTTP report: status, ok, url, redirected, ms, headers, body. Use for REST APIs too.",
-    outline: "Discover page structure: shows repeating tag.class patterns with counts. Use before extract on an unknown page.",
-    locate: "Find which CSS selector holds a given text string. Use when you know the text content but not the selector.",
-    extract: "Extract structured multi-field rows from repeating elements via CSS selector. The main extraction mode.",
-    table: "Extract HTML <table> as keyed rows. Column names come from table headers.",
-    markdown: "Convert page to readable markdown. Good for documentation pages, with optional --budget for token control.",
-  }, { description: "Operation mode" }),
+    fetch:    "fetch",
+    outline:  "outline",
+    locate:   "locate",
+    extract:  "extract",
+    table:    "table",
+    markdown: "markdown",
+    parse:    "parse",
+  }, { description: "Operation mode. fetch=full HTTP report (no cache); outline=structure discovery; locate=find CSS selector for text; extract=structured row extraction; table=HTML table rows; markdown=readable markdown with token budget; parse=raw page content (cached ~2min)" }),
 
   // Mode-specific parameters
-  selector: Type.Optional(Type.String({ description: "CSS selector for extract/table/locate/count modes" })),
-  fields: Type.Optional(Type.String({ description: "Row fields for extract mode, e.g. 'title=a, href=a@href, id=@data-id, price=.price'. Empty selector (@id) reads attribute of the matched element itself." })),
-  query: Type.Optional(Type.String({ description: "Text to locate (for locate mode) or filter expression for extract/table (e.g. 'price > 100 && name ~ /^foo/i')" })),
+  selector: Type.Optional(Type.String({ description: "CSS selector for extract/table/locate/parse modes" })),
+  fields: Type.Optional(Type.String({ description: "Row fields for extract mode, e.g. 'title=a, href=a@href, id=@data-id, price=.price'. Use @attr syntax for element attributes, @innerText/@innerHTML for text content." })),
+  query: Type.Optional(Type.String({ description: "For locate mode: text to find. For extract/table mode: filter expression, e.g. 'price > 100 && name ~ /^foo/i'" })),
 
   // Output control
-  budget: Type.Optional(Type.Number({ description: "Target token budget for markdown/extract output. Cuts at item boundaries." })),
-  limit: Type.Optional(Type.Number({ description: "Max rows to return (default 50, use -1 for all). Truncation is always announced on stderr with the exact --offset to continue from." })),
-  offset: Type.Optional(Type.Number({ description: "Pagination offset for continuation. Set to the meta.next_offset from a previous --json-envelope result." })),
-  json: Type.Optional(Type.Boolean({ description: "Output as JSON instead of the default compact TSV" })),
-  envelope: Type.Optional(Type.Boolean({ description: "Use --json-envelope for continuation support: stdout becomes {data, meta}. Continue only while meta.state is 'more'." })),
+  budget: Type.Optional(Type.Number({ description: "Target token budget for markdown/extract output. Cuts at item boundaries. Always emits at least 1 item." })),
+  limit: Type.Optional(Type.Number({ description: "Max rows to return (default 50, use -1 for all). Truncation announces exact --offset to continue." })),
+  offset: Type.Optional(Type.Number({ description: "Pagination offset for continuation. Set to meta.next_offset from a previous --json-envelope result." })),
+  json: Type.Optional(Type.Boolean({ description: "Output as JSON instead of compact TSV (TSV is ~1/3 the tokens of JSON)." })),
+  envelope: Type.Optional(Type.Boolean({ description: "Use --json-envelope for continuation: stdout becomes {data, meta}. Continue only while meta.state is 'more'. Stop on 'complete' or 'past_end'." })),
+
+  // Cache control
+  fresh: Type.Optional(Type.Boolean({ description: "Force a fresh fetch, bypassing the ~2min URL cache. Use when you need real-time data." })),
 
   // HTTP request control
   headers: Type.Optional(Type.Array(Type.String(), { description: "Custom HTTP headers, e.g. ['authorization: Bearer x', 'accept: application/json']" })),
-  method: Type.Optional(Type.Enum({ GET: "GET", POST: "POST", PUT: "PUT", DELETE: "DELETE", HEAD: "HEAD" }, { description: "HTTP method for fetch mode (default: GET)" })),
+  method: Type.Optional(Type.Enum({
+    GET:    "GET",
+    POST:   "POST",
+    PUT:    "PUT",
+    DELETE: "DELETE",
+    HEAD:   "HEAD",
+  }, { description: "HTTP method for fetch mode (default: GET)" })),
   body: Type.Optional(Type.String({ description: "Request body for fetch mode (POST/PUT). Use @filepath to read from a file." })),
   auth: Type.Optional(Type.String({ description: "Basic authentication as 'user:pass'" })),
   insecure: Type.Optional(Type.Boolean({ description: "Skip TLS verification (-k flag). Use for self-signed certs." })),
@@ -41,7 +55,7 @@ export const webExtractParams = Type.Object({
 
 export type WebExtractParams = {
   url: string;
-  mode: string;
+  mode: "fetch" | "outline" | "locate" | "extract" | "table" | "markdown" | "parse";
   selector?: string;
   fields?: string;
   query?: string;
@@ -50,8 +64,9 @@ export type WebExtractParams = {
   offset?: number;
   json?: boolean;
   envelope?: boolean;
+  fresh?: boolean;
   headers?: string[];
-  method?: string;
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "HEAD";
   body?: string;
   auth?: string;
   insecure?: boolean;
@@ -59,11 +74,24 @@ export type WebExtractParams = {
 
 /**
  * Build the ax CLI argument array from structured parameters.
+ *
+ * ax mode mapping:
+ *   fetch    → --fetch          (full HTTP report, no cache)
+ *   outline  → --outline        (tag.class pattern discovery)
+ *   locate   → --locate <text>  (find CSS selector for text)
+ *   extract  → <selector> --row <fields>  (structured row extraction)
+ *   table    → <selector> --table         (HTML table extraction)
+ *   markdown → --md           (readable markdown conversion)
+ *   parse    → (no flag)       (default parse mode, cached ~2min)
  */
 export function buildAxArgs(params: WebExtractParams): string[] {
   const args: string[] = [params.url];
 
   switch (params.mode) {
+    case "fetch":
+      args.push("--fetch");
+      break;
+
     case "outline":
       args.push("--outline");
       break;
@@ -96,9 +124,9 @@ export function buildAxArgs(params: WebExtractParams): string[] {
       args.push("--md");
       break;
 
-    case "fetch":
-      // No extra positional args for fetch mode
-      // But we do support -H, -X, -d, -u etc.
+    case "parse":
+      // Default ax mode — just the URL, optionally with selector
+      // Used for raw page content (cached ~2min)
       break;
   }
 
@@ -108,6 +136,9 @@ export function buildAxArgs(params: WebExtractParams): string[] {
   if (params.offset !== undefined) args.push("--offset", String(params.offset));
   if (params.json) args.push("--json");
   if (params.envelope) args.push("--json-envelope");
+
+  // Cache control
+  if (params.fresh) args.push("--fresh");
 
   // HTTP request control
   if (params.headers) {
