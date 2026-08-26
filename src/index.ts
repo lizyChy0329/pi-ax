@@ -68,7 +68,7 @@ Continuation (pagination):
       }
 
       try {
-        const args = buildAxParams(params as any);
+        const args = buildAxArgs(params as any);
         const { stdout, stderr } = runAx(args, signal);
 
         // ax writes extraction metadata (row count, truncation notes, cache hits)
