@@ -1,6 +1,6 @@
 ![hero](assets/readme/hero.svg)
 
-# @lizychy0329/pi-ax
+# pi-ax
 
 **ax 集成包 for pi** — 结构化网页提取，无需写任何解析脚本。
 
